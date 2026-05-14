@@ -2,10 +2,20 @@
 
 A local AI-powered chatbot and research assistant built using Python and Ollama.
 
-## Current Features
 
-- Simple chatbot
-- Local LLM
+## v2 Features
+
+- Conversational memory
+- Multi-turn context awareness
+- System prompt support
+- Stateful AI conversations
+
+## Current Capabilities
+
+The assistant can now:
+- remember previous messages
+- answer follow-up questions
+- maintain conversational context
 
 ## Tech Stack
 
@@ -14,11 +24,6 @@ A local AI-powered chatbot and research assistant built using Python and Ollama.
 - Phi-3 Mini
 - Local LLM workflows
 
-## Project Evolution
-
-### v1
-- Basic chatbot
-
 
 ## Run Locally
 
@@ -26,12 +31,3 @@ A local AI-powered chatbot and research assistant built using Python and Ollama.
 pip install -r requirements.txt
 python main.py
 ```
-
-## Future Plans
-
-- Adding Memory
-- Tool calling
-- Calculator agent
-- Web search
-- Autonomous workflows
-- Research pipeline
