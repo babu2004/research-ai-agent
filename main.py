@@ -1,8 +1,14 @@
 from ollama import chat
 import re
 import datetime
-import random
+import requests
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+print(WEATHER_API_KEY)
 print("\n=== Autonomous Research AI Assistant ===\n")
 print("Type 'exit' to quit.\n")
 
@@ -24,17 +30,70 @@ def get_time():
     return current_time.strftime("%I:%M %p")
 
 
-def random_fact():
+def get_weather(city):
 
-    facts = [
-        "Python was created by Guido van Rossum.",
-        "LLMs predict the next token, not actual thoughts.",
-        "AI agents combine reasoning with tools.",
-        "RAG stands for Retrieval-Augmented Generation."
-    ]
+    url = f"https://wttr.in/{city}?format=j1"
 
-    return random.choice(facts)
+    response = requests.get(url)
 
+    data = response.json()
+
+    try:
+
+        current = data["current_condition"][0]
+
+        temperature = current["temp_C"]
+
+        description = current["weatherDesc"][0]["value"]
+
+        humidity = current["humidity"]
+
+        return (
+            f"City: {city}\n"
+            f"Temperature: {temperature}°C\n"
+            f"Weather: {description}\n"
+            f"Humidity: {humidity}%"
+        )
+
+    except Exception as error:
+
+        return f"Weather data not found: {error}"
+
+def classify_intent(user_input):
+
+    classification_prompt = f"""
+You are an intent classifier.
+
+Your job is to classify the user's request into ONE category only.
+
+Categories:
+- calculator
+- weather
+- time
+- chat
+
+Rules:
+- Respond with ONLY one category word.
+- No explanations.
+- No extra text.
+
+User request:
+{user_input}
+"""
+
+    response = chat(
+        model="phi3:mini",
+        messages=[
+            {
+                "role": "user",
+                "content": classification_prompt
+            }
+        ]
+    )
+
+    intent = response["message"]["content"].strip().lower()
+
+    return intent
 
 
 # CONVERSATION MEMORY
@@ -66,31 +125,30 @@ while True:
 
     print("\n" + "=" * 50)
 
-    
+    intent = classify_intent(user_input)
+
+    print(f"\n[Detected Intent]: {intent}")
+
+    # =========================
     # CALCULATOR TOOL
-    
+    # =========================
 
-    math_symbols = ["+", "-", "*", "/", "%"]
-
-    is_math = any(symbol in user_input for symbol in math_symbols)
-
-    if is_math:
+    if intent == "calculator":
 
         expression = re.sub(r"[^0-9+\-*/().% ]", "", user_input)
 
         print("\n[Using Calculator Tool]")
-        print(f"Expression: {expression}")
 
         tool_result = calculator(expression)
 
         print("\nTool Result:")
         print(tool_result)
-
-    
+        
+    # =========================
     # TIME TOOL
-    
+    # =========================
 
-    elif "time" in user_lower:
+    elif intent == "time":
 
         print("\n[Using Time Tool]")
 
@@ -99,22 +157,25 @@ while True:
         print("\nCurrent Time:")
         print(current_time)
 
-    
-    # RANDOM FACT TOOL
-    
 
-    elif "fact" in user_lower:
+    # =========================
+    # WEATHER TOOL
+    # =========================
 
-        print("\n[Using Random Fact Tool]")
+    elif intent == "weather":
 
-        fact = random_fact()
+        print("\n[Using Weather Tool]")
 
-        print("\nRandom Fact:")
-        print(fact)
+        city = input("Enter city: ")
 
-    
-    # NORMAL AI CHAT
-    
+        weather_result = get_weather(city)
+
+        print("\nWeather Info:")
+        print(weather_result)
+
+    # =========================
+    # NORMAL CHAT
+    # =========================
 
     else:
 
@@ -143,5 +204,3 @@ while True:
 
         print("\nAI Response:")
         print(assistant_text)
-
-    print("\n" + "=" * 50 + "\n")
