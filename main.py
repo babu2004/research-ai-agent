@@ -1,99 +1,12 @@
 from ollama import chat
 import re
-import datetime
-import requests
-import os
-from dotenv import load_dotenv
+from tools import calculator, get_time, get_weather,classify_intent 
+from research_tool import extract_research_topic,research_topic
 
-load_dotenv()
+model = "qwen2.5-coder:3b"
 
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
-print(WEATHER_API_KEY)
 print("\n=== Autonomous Research AI Assistant ===\n")
 print("Type 'exit' to quit.\n")
-
-
-
-# TOOLS
-
-
-def calculator(expression):
-    try:
-        result = eval(expression)
-        return f"Result: {result}"
-    except Exception as error:
-        return f"Error: {error}"
-
-
-def get_time():
-    current_time = datetime.datetime.now()
-    return current_time.strftime("%I:%M %p")
-
-
-def get_weather(city):
-
-    url = f"https://wttr.in/{city}?format=j1"
-
-    response = requests.get(url)
-
-    data = response.json()
-
-    try:
-
-        current = data["current_condition"][0]
-
-        temperature = current["temp_C"]
-
-        description = current["weatherDesc"][0]["value"]
-
-        humidity = current["humidity"]
-
-        return (
-            f"City: {city}\n"
-            f"Temperature: {temperature}°C\n"
-            f"Weather: {description}\n"
-            f"Humidity: {humidity}%"
-        )
-
-    except Exception as error:
-
-        return f"Weather data not found: {error}"
-
-def classify_intent(user_input):
-
-    classification_prompt = f"""
-You are an intent classifier.
-
-Your job is to classify the user's request into ONE category only.
-
-Categories:
-- calculator
-- weather
-- time
-- chat
-
-Rules:
-- Respond with ONLY one category word.
-- No explanations.
-- No extra text.
-
-User request:
-{user_input}
-"""
-
-    response = chat(
-        model="phi3:mini",
-        messages=[
-            {
-                "role": "user",
-                "content": classification_prompt
-            }
-        ]
-    )
-
-    intent = response["message"]["content"].strip().lower()
-
-    return intent
 
 
 # CONVERSATION MEMORY
@@ -174,6 +87,32 @@ while True:
         print(weather_result)
 
     # =========================
+    # RESEARCH TOOL
+    # =========================        
+
+    elif intent == "research":
+
+        print("\n[Using Research Workflow]")
+
+        topic = extract_research_topic(user_input)
+        
+
+        report = research_topic(topic)
+
+        print("\nResearch Report:\n")
+        print(report)
+
+        # SAVE REPORT
+
+        filename = f"{topic.replace(' ', '_')}_report.txt"
+
+        with open(filename, "w", encoding="utf-8") as file:
+
+            file.write(report)
+
+        print(f"\nReport saved as: {filename}")
+
+    # =========================
     # NORMAL CHAT
     # =========================
 
@@ -189,7 +128,7 @@ while True:
         )
 
         assistant_response = chat(
-            model="phi3:mini",
+            model=model,
             messages=conversation_history
         )
 
