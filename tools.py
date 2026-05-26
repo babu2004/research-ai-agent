@@ -53,14 +53,6 @@ def get_weather(city):
 
 
 
- 
-
-
-
-
-# topic extraction 
-
-
 # intent   
 
 def classify_intent(user_input):

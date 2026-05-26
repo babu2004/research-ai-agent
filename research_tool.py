@@ -1,4 +1,5 @@
 from ollama import chat
+from duckduckgo_search import DDGS
 
 model = 'qwen2.5-coder:3b'
 
@@ -47,13 +48,48 @@ def extract_research_topic(user_input):
     return topic
 
 
+# Web Search 
+
+def web_search(query):
+
+    results_text = ""
+
+    with DDGS() as ddgs:
+        
+        results = ddgs.text(query, max_results=5)
+
+        for index, result in enumerate(results, start=1):
+
+            title = result["title"]
+
+            body = result["body"]
+
+            results_text += (
+                f"\n Result {index}: \n"
+                f"Title: {title}\n"
+                f"snippet: {body}\n"
+            )
+
+    return results_text
+        
+
+
 # Research
 
 def research_topic(topic):
+
+    print("\n[Searching web...]")
+
+    web_results = web_search(topic)
+
     research_prompt = f"""
     You are an expert research analyst. Write a comprehensive, beginner-friendly research report on the topic provided below.
 
     Topic: {topic}
+
+    Use the following web search information:
+
+    {web_results}
 
     The report MUST be structured with the following exact Markdown headers:
     # Research Report: {topic}
