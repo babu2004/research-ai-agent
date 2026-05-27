@@ -94,23 +94,41 @@ while True:
 
         print("\n[Using Research Workflow]")
 
-        topic = extract_research_topic(user_input)
-        
+        topic= extract_research_topic(user_input)
+        research_data =  research_topic(topic)
+       
+        if research_data:
+            print("\nStructured Research Report:\n")
 
-        report = research_topic(topic)
+            formatted_report = ""
 
-        print("\nResearch Report:\n")
-        print(report)
+            formatted_report += f"# {research_data['title']}\n\n"
+
+            formatted_report += "## Overview\n"
+            formatted_report += f"{research_data['overview']}\n\n"
+
+            formatted_report += "## Key Concepts\n"
+
+            for concept in research_data["key_concepts"]:
+                formatted_report += f"- {concept}\n"
+            formatted_report+="## Applications\n"
+
+            for app in research_data["applications"]:
+                formatted_report += f"- {app}\n"
+            formatted_report += "## Future Trends\n"
+
+            for trend in research_data["future_trends"]:
+                formatted_report += f"-{trend}\n"
 
         # SAVE REPORT
 
-        filename = f"{topic.replace(' ', '_')}_report.txt"
+            filename = f"{topic.replace(' ', '_')}_report.md"
 
-        with open(filename, "w", encoding="utf-8") as file:
+            with open(filename, "w", encoding="utf-8") as file:
 
-            file.write(report)
+                file.write(formatted_report)
 
-        print(f"\nReport saved as: {filename}")
+            print(f"\nReport saved as: {filename}")
 
     # =========================
     # NORMAL CHAT

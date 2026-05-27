@@ -1,5 +1,6 @@
 from ollama import chat
-from duckduckgo_search import DDGS
+from ddgs import DDGS
+import json
 
 model = 'qwen2.5-coder:3b'
 
@@ -83,35 +84,43 @@ def research_topic(topic):
     web_results = web_search(topic)
 
     research_prompt = f"""
-    You are an expert research analyst. Write a comprehensive, beginner-friendly research report on the topic provided below.
+    You are an expert research analyst. Your task is to extract, analyze, and format a comprehensive, beginner-friendly research report into a strict JSON object.
 
     Topic: {topic}
-
-    Use the following web search information:
-
+    Web Search Context:
     {web_results}
 
-    The report MUST be structured with the following exact Markdown headers:
-    # Research Report: {topic}
+    You must return a valid JSON object matching this exact structure:
+    {{
+        "title": "Research Report: {topic}",
+        "overview": "Clear, high-level summary of what this topic is, its core definition, and why it matters today. Exactly 1-2 paragraphs.",
+        "key_concepts": [
+            "**Term 1**: Definition of the first foundational concept, rule, or pillar critical to understanding this topic.",
+            "**Term 2**: Definition of the second foundational concept.",
+            "**Term 3**: Definition of the third foundational concept."
+        ],
+        "applications": [
+            "**Application 1 **: A concrete, current example of how this topic is actively used in the industry today.",
+            "**Application 2 **: A second current real-world example."
+        ],
+        "future_trends": [
+            "A highlight of an upcoming technological advancement or development expected in the next 5-10 years.",
+            "A description of a potential challenge, blocker, or ethical consideration facing the topic."
+        ]
+    }}
 
-    ## Overview
-    Provide a clear, high-level summary of what this topic is, its core definition, and why it matters today. Keep it to 1-2 paragraphs.
-
-    ## Key Concepts
-    Define 3-4 foundational terms, rules, or pillars critical to understanding this topic. Use bullet points with bold text for the terms. Do not add introductory or concluding fluff to this section.
-
-    ## Real-World Applications
-    Provide 2-3 concrete, current examples of how this topic is actively used in the industry today. Use brief, punchy subheadings for each example.
-
-    ## Future Trends
-    Highlight upcoming technological advancements, potential challenges/blockers, or developments expected in the next 5-10 years.
-
-    Writing Requirements:
+    Content & Quality Requirements:
     1. Tone: Professional yet accessible to a beginner. Avoid overly dense academic jargon.
-    2. Format: Use Markdown elements (bolding, bullet points) to maximize scannability.
-    3. Content: Ensure each section contains distinct, non-overlapping information. Do not repeat facts across sections.
-    4. Output: Return ONLY the structured Markdown report. Do not include conversational intro/outro text (like "Sure, here is your report").
+    2. Format: Use Markdown elements like **bolding** *inside* the JSON string values to maximize scannability for the array items.
+    3. Content: Ensure each field contains distinct, non-overlapping information. Do not repeat facts across sections.
+    4. Data Integrity: Rely on the provided Web Search Context to pull factual, current, and concrete data points.
+
+    Output Rules:
+    - Return ONLY the raw, valid JSON object.
+    - Do NOT wrap the JSON in markdown code blocks (e.g., do not use ```json ... ```).
+    - Do NOT include any conversational intro/outro text, markdown titles, or explanations outside the JSON object.
     """
+
     response = chat(
         model = model,
         messages = [
@@ -122,5 +131,31 @@ def research_topic(topic):
         ]
     )
 
-    return response["message"]["content"]
+    output = response["message"]["content"]
+    clean_output = (
+    output
+    .replace("```json", "")
+    .replace("```", "")
+    .strip()
+)
+
+    try:
+        parsed_json = json.loads(clean_output,strict = False)
+        
+        return parsed_json
+    
+    except Exception as error:
+        print("\nJSON Parsing Error: ")
+        print(error)
+        
+        return {
+            "title": topic,
+            "overview": "JSON parsing failed.",
+            "key_concepts": [],
+            "applications": [],
+            "future_trends": []
+        }
+
+
+
 
