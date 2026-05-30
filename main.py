@@ -1,6 +1,6 @@
 from ollama import chat
 import re
-from tools import calculator, get_time, get_weather,classify_intent 
+from tools import calculator, get_time, get_weather,classify_intent, load_memory, save_memory, show_memory 
 from research_tool import extract_research_topic,research_topic
 
 model = "qwen2.5-coder:3b"
@@ -86,6 +86,16 @@ while True:
         print("\nWeather Info:")
         print(weather_result)
 
+    #========================
+    # HISTORY TOOL
+    #========================
+
+    elif intent == "memory":
+        print("\n[Using Memory Tool]")
+        memory_output = show_memory()
+        print("\nSaved Research Topics: ")
+        print(memory_output)
+
     # =========================
     # RESEARCH TOOL
     # =========================        
@@ -120,15 +130,23 @@ while True:
             for trend in research_data["future_trends"]:
                 formatted_report += f"-{trend}\n"
 
+        # saveing report to memory
+        memory = load_memory()
+        memory.append(research_data)
+        save_memory(memory)
+        print("\n Research saved to memory. \n")
+
         # SAVE REPORT
 
-            filename = f"{topic.replace(' ', '_')}_report.md"
+        filename = f"reports/{topic.replace(' ', '_')}_report.md"
 
-            with open(filename, "w", encoding="utf-8") as file:
+        with open(filename, "w", encoding="utf-8") as file:
 
-                file.write(formatted_report)
+            file.write(formatted_report)
 
-            print(f"\nReport saved as: {filename}")
+        print(f"\nReport saved as: {filename}")
+
+
 
     # =========================
     # NORMAL CHAT
@@ -159,5 +177,6 @@ while True:
             }
         )
 
-        print("\nAI Response:")
+        print("\nAI Response:\n")
         print(assistant_text)
+        print("\n" + "=" * 50)

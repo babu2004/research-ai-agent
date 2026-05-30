@@ -1,6 +1,7 @@
 import datetime
 import requests
 from ollama import chat
+import json
 
 model = 'qwen2.5-coder:3b'
 
@@ -58,26 +59,35 @@ def get_weather(city):
 def classify_intent(user_input):
 
     classification_prompt = f"""
-You are an intent classifier.
+    You are an advanced intent classification system. Your job is to classify the user's request into EXACTLY ONE category from the list below.
 
-Your job is to classify the user's request into ONE category only.
-- Use "research" when the user asks to research a topic or generate a report.
+    Available Categories:
+    - calculator (For mathematical equations, basic arithmetic, or number solving)
+    - weather (For checking temperature, rain, or forecasts)
+    - time (For asking the current time, date, or time zones)
+    - research (ONLY use this when the user explicitly asks to "generate a report", "write a research paper", or uses the command word "research")
+    - chat (For general knowledge, definitions, history questions, casual talk, or translation requests)
+    - memory (For when the user asks about saved research or memory)
 
-Categories:
-- calculator
-- weather
-- time
-- chat
-- research 
+    Examples for Guidance:
+    User: "research machine learning" -> research
+    User: "can you generate a research report on solar panels" -> research
+    User: "what are the alphabets in tamil" -> chat
+    User: "tell me a joke" -> chat
+    User: "what is 45 * 2" -> calculator
+    User: "is it raining today" -> weather
+    User: "retrive the memory" -> memory
+    user: "show the saved memory" -> memory 
 
-Rules:
-- Respond with ONLY one category word.
-- No explanations.
-- No extra text.
 
-User request:
-{user_input}
-"""
+    Rules:
+    1. Respond with ONLY the single lowercase category word from the list.
+    2. Absolutely no markdown code blocks, punctuation, or extra explanations.
+
+    User request:
+    {user_input}
+    """
+
 
     response = chat(
         model=model,
@@ -92,3 +102,43 @@ User request:
     intent = response["message"]["content"].strip().lower()
 
     return intent
+
+#=================
+# MEMORY FUNCTION
+#=================
+
+def load_memory():
+
+    try:
+        with open("memory.json", "r", encoding="utf-8") as file:
+            return json.load(file)
+
+    except Exception as error:
+        print(f"Loading memory failed: {error}")
+        return []
+
+
+def save_memory(memory_data):
+
+    try:
+        with open("memory.json", "w", encoding="utf-8") as file:
+            json.dump(memory_data, file, indent=4)
+
+    except Exception as error:
+        print(f"Failed to save memory: {error}")
+
+
+def show_memory():
+
+    memory = load_memory()
+
+    if not memory:
+        return "\nNo memory found.\n"
+
+    output = ""
+
+    for index, item in enumerate(memory, start=1):
+        output += f"\n{index}. {item['title']}"
+
+    return output
+    
