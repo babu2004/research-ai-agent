@@ -1,33 +1,14 @@
-# Research AI Agent
+## Version 4.0 - Persistent Memory
 
-A local AI-powered chatbot and research assistant built using Python and Ollama.
+Features:
+- Saves research reports to memory.json
+- Loads memory across sessions
+- Displays saved research topics
+- JSON-based long-term memory storage
 
-
-## v2 Features
-
-- Conversational memory
-- Multi-turn context awareness
-- System prompt support
-- Stateful AI conversations
-
-## Current Capabilities
-
-The assistant can now:
-- remember previous messages
-- answer follow-up questions
-- maintain conversational context
-
-## Tech Stack
-
-- Python
-- Ollama
-- Phi-3 Mini
-- Local LLM workflows
-
-
-## Run Locally
-
-```bash
-pip install -r requirements.txt
-python main.py
-```
+Skills Learned:
+- JSON handling
+- File I/O
+- Persistent storage
+- Memory management
+- Data validation
